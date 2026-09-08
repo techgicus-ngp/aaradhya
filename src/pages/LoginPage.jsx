@@ -126,7 +126,7 @@ export default function LoginPage() {
           </motion.div>
 
           <motion.div className="brand-title" variants={dropIn}>
-            <h1>Saraswati Infra</h1>
+            <h1>Aaradhya</h1>
             <span className="brand-tag">Real Estate Management</span>
           </motion.div>
 
