@@ -143,7 +143,7 @@ export const MAPFONT = "'Poppins', 'Inter', -apple-system, sans-serif";
 
 /** Non-plot land uses. */
 export const KIND = {
-  plot: { label: 'Plot', fill: '#D9AC8B', stroke: '#9A6E52', ink: '#43301E' },
+  plot: { label: 'Plot', fill: '#eeb084', stroke: '#9b6849', ink: '#43301E' },
   road: { label: 'Road', fill: '#3B3F44', stroke: '#3B3F44', ink: '#E8E4DA' },
   open_space: { label: 'Open space', fill: '#6E9B3E', stroke: '#54782F', ink: '#F2F6EC' },
   amenity: { label: 'Amenity space', fill: '#3E86C4', stroke: '#2F679A', ink: '#EDF4FB' },
@@ -153,7 +153,7 @@ export const KIND = {
 
 /** Two warm tones sampled from the reference render, alternated plot by
     plot so neighbours never share an edge colour. */
-export const PLOT_TONES = ['#DFB694', '#CB9E7F'];
+export const PLOT_TONES = ['#f4d5bc', '#e2baa0'];
 export const toneOf = (name) => PLOT_TONES[(parseInt(name, 10) || 0) % PLOT_TONES.length];
 
 /* Selection sits outside the layout's semantic palette on purpose: tan

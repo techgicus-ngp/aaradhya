@@ -2612,7 +2612,8 @@ export default function PlanMap({
   const wheelRef = useRef(0);
   const flyRef = useRef(0);
   const winRef = useRef(null);
-
+const moveScheduledRef = useRef(false);
+const lastMoveRef = useRef(null);
   /* the wall and dimension SVGs, written to directly rather than
      re-rendered — see paintWalls / paintDims */
   const wallSvgRef = useRef(null);
@@ -4263,28 +4264,30 @@ export default function PlanMap({
     };
   };
 
-  const onPointerMove = (e) => {
-    if (pinchRef.current.has(e.pointerId)) {
-      pinchRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    }
+ const onPointerMove = (e) => {
+  lastMoveRef.current = { x: e.clientX, y: e.clientY };
+
+  if (pinchRef.current.has(e.pointerId)) {
+    pinchRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  }
+
+  if (moveScheduledRef.current) return;
+  moveScheduledRef.current = true;
+
+  requestAnimationFrame(() => {
+    moveScheduledRef.current = false;
+    const last = lastMoveRef.current;
+    if (!last) return;
 
     if (pinchRef.current.size >= 2) {
       const start = pinchStartRef.current;
       const points = [...pinchRef.current.values()];
       if (!start || points.length < 2) return;
-
-      const dx = points[1].x - points[0].x;
-      const dy = points[1].y - points[0].y;
-      const distance = Math.max(1, Math.hypot(dx, dy));
+      const dx2 = points[1].x - points[0].x;
+      const dy2 = points[1].y - points[0].y;
+      const distance = Math.max(1, Math.hypot(dx2, dy2));
       const zoomDelta = Math.log2(distance / Math.max(1, start.distance));
-      const nextZoom = clamp(
-        start.zoom + zoomDelta * PINCH_GAIN,
-        FLY_MIN_Z,
-        MAP_MAX_Z,
-      );
-
-      /* the plot stays under the fingers, and the frame is theirs from
-         here on — no refit will take this zoom back */
+      const nextZoom = clamp(start.zoom + zoomDelta * PINCH_GAIN, FLY_MIN_Z, MAP_MAX_Z);
       manualZoomRef.current = true;
       zoomAtPlot(nextZoom);
       touched.current = Date.now();
@@ -4293,12 +4296,12 @@ export default function PlanMap({
 
     const g = dragRef.current;
     if (!g) return;
-    const dx = e.clientX - g.x;
-    const dy = e.clientY - g.y;
+    const dx = last.x - g.x;
+    const dy = last.y - g.y;
     if (Math.abs(dx) > 3 || Math.abs(dy) > 3) g.moved = true;
     applyTurn(dx * 0.008, -dy * 0.006, g);
-  };
-
+  });
+};
   const endDrag = (e) => {
     pinchRef.current.delete(e?.pointerId);
 
