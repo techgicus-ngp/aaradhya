@@ -2258,6 +2258,7 @@ import {
   ACCENT, CANVAS, HAIR, LIFT_H, MAX_TILT, MONO,
   SEL_STROKE, SELECTED_FILL, WALL_EDGE, WALL_FILL,
 } from '../../theme/tokens';
+
 import '../../styles/home.css';
 
 export const DOWN_MS = 190;   // the old plot sinking
@@ -2271,6 +2272,19 @@ export const easeOut = (t) => 1 - (1 - t) ** 3;
    finish from a standstill — easeOut alone leaves at full speed, which
    is the jerk on the first frame. */
 export const easeInOut = (t) => (t < 0.5 ? 4 * t ** 3 : 1 - ((-2 * t + 2) ** 3) / 2);
+
+/* ── THE COLOUR BEHIND THE MAP ───────────────────────────────────────
+   Shown in three places, and they must agree or a seam appears at the
+   edge of the frame: before the tiles land, in the gaps a turned
+   camera opens at the corners, and under the container while it is
+   oversized for a raised plot.
+
+   Black rather than CANVAS so the satellite imagery has no visible
+   frame around it. Everything else in this file stays on CANVAS on
+   purpose — the panels, the compass, the wall fills and the label
+   boxes all sit OVER imagery, and at full black their text and their
+   borders stop reading. */
+const MAP_BG = '#000';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -2323,7 +2337,7 @@ const NATIVE_TILT_PER_PX = 0.3;
    theirs to ask for.
 
    Nothing here levels the camera behind them afterwards either. Lean it
-   and it stays leaned; the only things that flatten it are the N button
+   and it stays leaned; the only things that flatten it are the compass
    and the toolbar's fit button.
 
    THE OPENING MOVE IS OFF, and these are what turn it back on:
@@ -2522,6 +2536,42 @@ const reducedMotion = () => {
    older WebKit only understands the two-argument form. */
 const safeArea = (side, base) => `calc(${base}px + env(safe-area-inset-${side}, 0px))`;
 
+/* ── IS THIS A SHARED LINK? ──────────────────────────────────────────
+   Asked TWO ways, and either one on its own is enough to take the
+   status view off the screen.
+
+   The `share` prop is the deliberate answer, but it has to be threaded
+   through every wrapper between the route and this component, and a
+   prop dropped anywhere in that chain fails SILENTLY toward the app
+   behaviour — sale colours and a status switch in front of a customer
+   who was never meant to see either. The URL cannot be forgotten by a
+   wrapper, because no wrapper is involved in reading it.
+
+   MATCHED TO THE REAL ROUTE:
+
+     app    https://…/maps/BT1meSHc2TcPf3f0VOrb
+     share  https://…/share/maps/BT1meSHc2TcPf3f0VOrb
+
+   so the presence of a /share/ segment is the whole test. If the public
+   link ever moves, log window.location.pathname on the shared page and
+   match what it actually prints — a regex that never fires is the same
+   as not having this at all. */
+const SHARE_PATH = /(^|[/#?&])share([/#?&=]|$)/;
+
+/* pathname AND hash AND query. A HashRouter puts the whole route in the
+   hash — pathname is just "/" — so testing pathname alone matches
+   nothing and the colours stay on. Testing all three costs nothing and
+   covers /share/maps/:id, #/share/maps/:id and ?share=1 alike. */
+const isShareUrl = () => {
+  if (typeof window === 'undefined') return false;
+  try {
+    const l = window.location;
+    return SHARE_PATH.test(`${l.pathname}${l.search}${l.hash}`);
+  } catch (err) {
+    return false;
+  }
+};
+
 /* A pick opens FLAT — straight down on the plot, north up, whatever the
    view was doing before. That is the state the figures are drawn for:
    no foreshortening, no skew, both axes at true scale, and the plot
@@ -2549,6 +2599,92 @@ const wrapRad = (r) => {
    useCallback on onPick below. */
 const PlanContentMemo = React.memo(PlanContent);
 
+/* ── THE COMPASS ─────────────────────────────────────────────────────
+   Which way is north, and one tap to get back to it.
+
+   It reads whichever camera is actually live — Google's own heading
+   while nothing is picked, camRef's CSS spin while a plot is raised —
+   and writes the needle's rotation STRAIGHT TO THE DOM on a rAF. Never
+   setState: the heading changes on every frame of a turn, and a render
+   per frame is the flicker the rest of this file spends its length
+   avoiding.
+
+   ALWAYS ON SCREEN, pointing up on a north-up map. It used to appear
+   only once the view was off square, which reads as a control that is
+   not there: nobody turns a map they do not already know turns. Sitting
+   in the corner pointing north is the thing that says it moves.
+
+   The loop writes only when the angle has actually changed, so a still
+   map costs one comparison a frame and no layout at all. */
+function Compass({ mapRef, camRef, selectedRef, onReset }) {
+  const gRef = useRef(null);
+  const lastRef = useRef(null);
+
+  useEffect(() => {
+    let raf = 0;
+    const tick = () => {
+      const g = gRef.current;
+      if (g) {
+        /* Flip either sign if the needle turns against the map. The CSS
+           camera rotates the CONTAINER by +spin, so north on the ground
+           appears at +spin on screen; Google's heading is the direction
+           the camera LOOKS, so north sits at -heading. */
+        const deg = selectedRef.current
+          ? camRef.current.spin / RAD
+          : -(mapRef.current?.getHeading?.() || 0);
+        const r = Math.round(deg * 10) / 10;
+        if (r !== lastRef.current) {
+          lastRef.current = r;
+          g.style.transform = `rotate(${r}deg)`;
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [mapRef, camRef, selectedRef]);
+
+  return (
+    <button
+      type="button"
+      title="Face north"
+      aria-label="Face north"
+      /* the native turn listens on the document in the capture phase,
+         so without this a tap here also starts a camera drag */
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={onReset}
+      style={{
+        position: 'absolute', zIndex: 6,
+        right: safeArea('right', 12),
+        top: FIT_PAD.top + 4,
+        width: 44, height: 44,
+        display: 'grid', placeItems: 'center', padding: 0,
+        background: CANVAS, border: `1px solid ${HAIR}`, borderRadius: 22,
+        cursor: 'pointer', touchAction: 'manipulation',
+        WebkitTapHighlightColor: 'transparent',
+        WebkitAppearance: 'none', appearance: 'none',
+      }}
+    >
+      <svg width="26" height="26" viewBox="-13 -13 26 26" style={{ display: 'block' }}>
+        <g ref={gRef} style={{ transformOrigin: '50% 50%', willChange: 'transform' }}>
+          <path d="M0 -9 L4.5 1.5 L0 -0.8 Z" fill={ACCENT} />
+          <path d="M0 -9 L-4.5 1.5 L0 -0.8 Z" fill={ACCENT} fillOpacity="0.55" />
+          <path d="M0 9 L4.5 -1.5 L0 0.8 Z" fill={HAIR} />
+          <path d="M0 9 L-4.5 -1.5 L0 0.8 Z" fill={HAIR} fillOpacity="0.55" />
+        </g>
+        {/* outside the rotating group on purpose: it labels the top of
+            the dial, not the needle, so it stays upright and readable */}
+        <text
+          x="0" y="-9.5" textAnchor="middle" fill="#E7E1D5"
+          fontFamily={MONO} fontSize="7" fontWeight="700"
+        >
+          N
+        </text>
+      </svg>
+    </button>
+  );
+}
+
 /**
  * Map + plan. The map owns pan and zoom; the plan is one div riding an
  * OverlayView, warped onto the ground each frame.
@@ -2565,8 +2701,8 @@ const PlanContentMemo = React.memo(PlanContent);
  * appears to teleport across the layout.
  *
  * IT OPENS FLAT. The layout is fitted north-up and held there; tilting
- * and turning are the user's, by hand or by the 360 button. Nothing
- * levels the camera again afterwards — see INTRO_LEAN and fitPlan's
+ * and turning are the user's, by hand or by the compass. Nothing levels
+ * the camera again afterwards — see INTRO_LEAN and fitPlan's
  * keepCamera.
  *
  * WITH A PLOT RAISED the whole surface orbits on a plain drag, turning
@@ -2584,7 +2720,7 @@ const PlanContentMemo = React.memo(PlanContent);
  * all run through overlayRef.draw() and direct DOM writes; React is
  * only re-rendered when the gesture ends or the drawing window actually
  * moves. That is what keeps the animation smooth — a setState per frame
- * was the flicker.
+ * was the flicker. The compass follows the same rule.
  *
  * A pick FLIES the camera in — see flyTo. The OPENING view is a fit to
  * the PLOTS — see fitPlan. Not a fixed zoom, which frames a laptop and
@@ -2598,7 +2734,7 @@ const PlanContentMemo = React.memo(PlanContent);
  */
 export default function PlanMap({
   layout, selected, onSelect, matches, status, mapRef, fitRef, onReady,
-  showNumbers, setShowNumbers, showStatus, setShowStatus, reserve,
+  showNumbers, setShowNumbers, showStatus, setShowStatus, reserve, share = false,
 }) {
   const viewRef = useRef(null);
   const hostRef = useRef(null);
@@ -2612,8 +2748,7 @@ export default function PlanMap({
   const wheelRef = useRef(0);
   const flyRef = useRef(0);
   const winRef = useRef(null);
-const moveScheduledRef = useRef(false);
-const lastMoveRef = useRef(null);
+
   /* the wall and dimension SVGs, written to directly rather than
      re-rendered — see paintWalls / paintDims */
   const wallSvgRef = useRef(null);
@@ -2681,7 +2816,7 @@ const lastMoveRef = useRef(null);
   /* Degrees turned so far in this session, and how many are allowed.
      The budget is a ref, not INTRO_LAPS itself, because the two callers
      want different things: the opening lap is limited to INTRO_LAPS,
-     while the 360 button below turns until it is pressed again. */
+     while a lap started by hand turns until it is stopped. */
   const spunRef = useRef(0);
   const lapBudgetRef = useRef(Infinity);
 
@@ -2710,10 +2845,10 @@ const lastMoveRef = useRef(null);
   const [filterHits, setFilterHits] = useState(null);
 
   /* True once the CSS camera is off square. It drives the container
-     oversizing and whether the reset control is offered — a rotation
-     with no way back to north would be a trap. State, not a ref,
-     because the render has to react to it; the camera itself stays in
-     camRef and is read per frame. */
+     oversizing and whether the compass is offered — a rotation with no
+     way back to north would be a trap. State, not a ref, because the
+     render has to react to it; the camera itself stays in camRef and is
+     read per frame. */
   const [turned, setTurned] = useState(false);
 
   /* The same for the native camera, which is the one that moves while
@@ -2722,14 +2857,51 @@ const lastMoveRef = useRef(null);
   const [nativeTurned, setNativeTurned] = useState(false);
   const [nativeSpin, setNativeSpin] = useState(false);
 
-  /* The two view switches. App owns them when it passes setters down —
-     then the toolbar and these toggles stay in step. When it doesn't,
-     the flags live here instead, so the switches work on their own
-     rather than calling undefined and doing nothing. */
+  /* ── THE STATUS VIEW: ON IN THE APP, GONE ON A SHARED LINK ────────
+     Sale colours, the legend that explains them and the switch that
+     turns them off are ONE decision, taken here, and every one of the
+     three reads it. No route has to be told what kind of route it is,
+     and there is no shareView flag to keep in step with three other
+     files.
+
+     WHICH ROUTE THIS IS, ASKED TWO WAYS. `share` is the deliberate
+     answer; isShareUrl() is the backstop, because `share` has to be
+     threaded through every wrapper between the route and this component
+     and a prop dropped in that chain fails silently toward showing the
+     colours — in front of exactly the customer who should not see them.
+     Either one being true is enough. See SHARE_PATH at the top of the
+     file, and match it to your own public route.
+
+     ON BY DEFAULT IN THE APP, and the test is written so that only a
+     DELIBERATE false turns it off. `setShowStatus ? showStatus : ...`
+     used to read the prop bare, so a parent that owns the flag but has
+     not set it on the first render — undefined, not false — got the
+     colours switched off in the app as well, which is the bug that had
+     status missing on the routes that had asked for it. `showStatus
+     !== false` keeps undefined on the ON side of the line.
+
+     ownStatus seeds at plain `true` rather than at `showStatus !==
+     false` for the same reason: on a route that passes no status props
+     at all, seeding local state off a missing prop is a coin toss.
+
+     Sold / booked / available is the first thing anyone opening a
+     layout looks for, so it should never be a view someone has to go
+     and find a switch for. The white master-plan tone is not replaced
+     by it either — PlanContent only reaches for a status colour when a
+     plot actually HAS a status, so an unsold plot, or one Firestore has
+     not mapped yet, still draws in the plain drawing tone.
+
+     NOTE what is NOT in this test: `status` itself. A version reading
+     `!share && !status` blinks the colours off for the first frames of
+     every load, while the status map is still coming down from
+     Firestore. */
+  const canStatus = !isShareUrl();
+
   const [ownNumbers, setOwnNumbers] = useState(showNumbers !== false);
-  const [ownStatus, setOwnStatus] = useState(!!showStatus);
+  const [ownStatus, setOwnStatus] = useState(true);
+
   const numbersOn = setShowNumbers ? showNumbers : ownNumbers;
-  const statusOn = setShowStatus ? showStatus : ownStatus;
+  const statusOn = canStatus && (setShowStatus ? showStatus !== false : ownStatus);
   const toggleNumbers = setShowNumbers || setOwnNumbers;
   const toggleStatus = setShowStatus || setOwnStatus;
 
@@ -2750,7 +2922,9 @@ const lastMoveRef = useRef(null);
      rather than when the space actually changed. */
   const { left: rl = 0, right: rr = 0, top: rt = 0, bottom: rb = 0 } = reserve || {};
   const inset = useMemo(
-    () => ({ left: rl, right: rr, top: rt, bottom: rb }),
+    () => ({
+      left: rl, right: rr, top: rt, bottom: rb,
+    }),
     [rl, rr, rt, rb],
   );
 
@@ -3029,7 +3203,7 @@ const lastMoveRef = useRef(null);
   --------------------------------------------------------------- */
   /* The frame a pick deserves, AT THE CAMERA'S CURRENT TILT: the zoom
      that fits the plot, and the centre that puts it in the middle of
-     what is actually VISIBLE once the sheet or panel has taken its
+     what is actually VISIBLE once the sheet or the panel has taken its
      share.
 
      Split out of flyTo because three other things need the same
@@ -3317,6 +3491,8 @@ const lastMoveRef = useRef(null);
      the camera closes in and the two read as one movement rather than a
      snap followed by a glide. The heading takes the short way round:
      from 350° that is forward 10°.
+
+     This is also what the compass calls while a plot is raised.
 
      If a picked plot still opens tilted after this, the tilt is being
      applied by usePlanCamera on selection — zero its default there
@@ -3670,7 +3846,7 @@ const lastMoveRef = useRef(null);
           syncNative();
           /* The lean is done. Whether anything turns from here is
              INTRO_LAPS' business — at 0 the camera simply waits for a
-             hand, or for the 360 button. */
+             hand. */
           if (INTRO_LAPS > 0) {
             lapBudgetRef.current = 360 * INTRO_LAPS;
             setNativeSpin(true);
@@ -3686,7 +3862,9 @@ const lastMoveRef = useRef(null);
   }, [map, selected, syncNative]);
 
   /* Back to north and flat, the short way round — from 350° that is
-     forward 10°, not backward 350°. */
+     forward 10°, not backward 350°. The compass calls this while
+     nothing is picked; levelCam is its opposite number for a raised
+     plot. */
   const nativeFaceNorth = useCallback(() => {
     const m = mapRef.current;
     if (!m || typeof m.moveCamera !== 'function') return;
@@ -3704,6 +3882,13 @@ const lastMoveRef = useRef(null);
     };
     requestAnimationFrame(step);
   }, [mapRef, syncNative]);
+
+  /* Whichever camera is live, back to north. This is the compass's
+     whole job. */
+  const resetHeading = useCallback(() => {
+    if (selRef.current) levelCam(500);
+    else nativeFaceNorth();
+  }, [levelCam, nativeFaceNorth]);
 
   /* Back out to the whole layout when a plot is dismissed, so closing a
      plot returns you to where you can pick the next one instead of
@@ -3871,8 +4056,9 @@ const lastMoveRef = useRef(null);
       zoom: 18,
       mapTypeId: 'hybrid',
       /* Without a Map ID set to Vector there is no native camera: the
-         free 360 and the opening orbit do nothing on any device, though
-         a picked plot still behaves exactly as before. */
+         free 360 and the opening orbit do nothing on any device, and
+         the compass will never appear, though a picked plot still
+         behaves exactly as before. */
       ...(GOOGLE_MAP_STYLE_ID ? { mapId: GOOGLE_MAP_STYLE_ID } : {}),
 
       /* ── THE THREE LINES THE 360 LIVES OR DIES BY ────────────────
@@ -3895,7 +4081,9 @@ const lastMoveRef = useRef(null);
       heading: 0,
       streetViewControl: false,
       fullscreenControl: false,
-      /* Custom camera controls are intentionally omitted. */
+      /* Google's own rotate control is off because the compass above
+         replaces it: one dial that reads whichever camera is live,
+         rather than a control that only knows about the native one. */
       rotateControl: false,
       mapTypeControl: false,
       zoomControlOptions: { position: maps.ControlPosition.RIGHT_BOTTOM },
@@ -3909,7 +4097,11 @@ const lastMoveRef = useRef(null);
          short on small plots. */
       maxZoom: MAP_MAX_Z,
       isFractionalZoomEnabled: true,
-      backgroundColor: CANVAS,
+      /* READ ONCE, AT CONSTRUCTION. Changing MAP_BG needs a full
+         reload to show here — a hot reload re-runs the render but not
+         this constructor, so the two divs below will go black while
+         the tile pane behind them stays on the old colour. */
+      backgroundColor: MAP_BG,
     });
     mapRef.current = m;
     setMap(m);
@@ -3954,8 +4146,8 @@ const lastMoveRef = useRef(null);
   }, [maps, mapRef, toLL, bounds, onReady, fitPlan]);
 
   /* Google's own gestures move the native camera without going through
-     this file, so the flag that offers the reset control is kept in
-     step by listening to the map rather than by being written to. */
+     this file, so the flag that offers the compass is kept in step by
+     listening to the map rather than by being written to. */
   useEffect(() => {
     if (!map || !maps) return undefined;
     const ls = ['heading_changed', 'tilt_changed']
@@ -4221,7 +4413,8 @@ const lastMoveRef = useRef(null);
 
      Draw only. No bump, no syncTurned — both are setState, and per
      frame they re-render the plan under a moving camera for no visible
-     gain. They run once at the end of the gesture instead. */
+     gain. They run once at the end of the gesture instead. The compass
+     needle does not wait for them: it reads camRef on its own rAF. */
   const applyTurn = useCallback((dSpin, dTilt, from) => {
     /* A deliberate turn, not the jitter of a finger resting on the
        glass. Past this the view is theirs and the top-view hold is
@@ -4264,30 +4457,28 @@ const lastMoveRef = useRef(null);
     };
   };
 
- const onPointerMove = (e) => {
-  lastMoveRef.current = { x: e.clientX, y: e.clientY };
-
-  if (pinchRef.current.has(e.pointerId)) {
-    pinchRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  }
-
-  if (moveScheduledRef.current) return;
-  moveScheduledRef.current = true;
-
-  requestAnimationFrame(() => {
-    moveScheduledRef.current = false;
-    const last = lastMoveRef.current;
-    if (!last) return;
+  const onPointerMove = (e) => {
+    if (pinchRef.current.has(e.pointerId)) {
+      pinchRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
 
     if (pinchRef.current.size >= 2) {
       const start = pinchStartRef.current;
       const points = [...pinchRef.current.values()];
       if (!start || points.length < 2) return;
-      const dx2 = points[1].x - points[0].x;
-      const dy2 = points[1].y - points[0].y;
-      const distance = Math.max(1, Math.hypot(dx2, dy2));
+
+      const dx = points[1].x - points[0].x;
+      const dy = points[1].y - points[0].y;
+      const distance = Math.max(1, Math.hypot(dx, dy));
       const zoomDelta = Math.log2(distance / Math.max(1, start.distance));
-      const nextZoom = clamp(start.zoom + zoomDelta * PINCH_GAIN, FLY_MIN_Z, MAP_MAX_Z);
+      const nextZoom = clamp(
+        start.zoom + zoomDelta * PINCH_GAIN,
+        FLY_MIN_Z,
+        MAP_MAX_Z,
+      );
+
+      /* the plot stays under the fingers, and the frame is theirs from
+         here on — no refit will take this zoom back */
       manualZoomRef.current = true;
       zoomAtPlot(nextZoom);
       touched.current = Date.now();
@@ -4296,12 +4487,12 @@ const lastMoveRef = useRef(null);
 
     const g = dragRef.current;
     if (!g) return;
-    const dx = last.x - g.x;
-    const dy = last.y - g.y;
+    const dx = e.clientX - g.x;
+    const dy = e.clientY - g.y;
     if (Math.abs(dx) > 3 || Math.abs(dy) > 3) g.moved = true;
     applyTurn(dx * 0.008, -dy * 0.006, g);
-  });
-};
+  };
+
   const endDrag = (e) => {
     pinchRef.current.delete(e?.pointerId);
 
@@ -4353,7 +4544,8 @@ const lastMoveRef = useRef(null);
      MOUSE: a plain left drag turns and tilts, from anywhere over the
      map — including over the header and the panels, for the same
      reason. Drags that start on something interactive are left alone,
-     or a button press would swing the camera.
+     or a button press would swing the camera. That INTERACTIVE list is
+     what keeps the compass and the site rail clickable.
 
      `touchmove` is cancelled non-passive for the length of a
      two-finger gesture, and Safari's own gesturestart/gesturechange
@@ -4709,21 +4901,27 @@ const lastMoveRef = useRef(null);
       {/* The window you see through. With a plot raised the map inside
           is deliberately larger, because the container turns; with
           nothing raised pad is {0,0} and the map sits flush, because
-          the rotation is the map's own and nothing is transformed. */}
+          the rotation is the map's own and nothing is transformed.
+
+          MAP_BG on both this and the host below, matching the map's own
+          backgroundColor: this one shows through before the tiles land,
+          the host's shows in the corners a turned container swings past
+          the imagery. Any two of the three disagreeing is a visible
+          seam at the edge of the frame. */}
       <div
         ref={viewRef}
         onTouchStart={noteNativeTouch}
         onPointerDown={noteNativeTouch}
         onContextMenu={(e) => e.preventDefault()}
         className="plan-map-viewport"
-        style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: CANVAS }}
+        style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: MAP_BG }}
       >
         <div
           ref={hostRef}
           style={{
             position: 'absolute',
             left: -pad.x, top: -pad.y, right: -pad.x, bottom: -pad.y,
-            background: CANVAS, transformOrigin: '50% 50%', willChange: 'transform',
+            background: MAP_BG, transformOrigin: '50% 50%', willChange: 'transform',
             cursor: selected ? 'grab' : 'default',
           }}
         />
@@ -4750,6 +4948,14 @@ const lastMoveRef = useRef(null);
       {wallLayer}
       {liftLayer}
 
+      {/* North, and the way back to it. Always on screen, reading
+          whichever camera is live — see Compass. */}
+      <Compass
+        mapRef={mapRef}
+        camRef={camRef}
+        selectedRef={selRef}
+        onReset={resetHeading}
+      />
 
       {/* Zoom, on screen, while a plot is raised.
 
@@ -4845,18 +5051,27 @@ const lastMoveRef = useRef(null);
         />
       )}
 
+      {/* The setter is WITHHELD rather than the toggle being told to
+          hide itself: MapToggles already draws only what it has a
+          handler for, so passing null here is what takes the status
+          switch off a shared link.
+
+          The numbers switch is untouched by any of this — a shared link
+          keeps it, because plot numbers are the one thing a customer
+          following a link actually needs to read. */}
       <MapToggles
         showNumbers={numbersOn}
         setShowNumbers={toggleNumbers}
         showStatus={statusOn}
-        setShowStatus={toggleStatus}
+        setShowStatus={canStatus ? toggleStatus : null}
       />
 
-      {/* The key to the sale colours, only while those colours are up.
-          `status` can be undefined on the first frames, before the
-          Firestore read lands, so the legend is given an empty map
-          rather than being allowed to index into nothing. */}
-      <StatusLegend plots={plots} status={status || {}} show={statusOn} />
+      {/* The key to the sale colours, and only where there are any. It
+          is up by default in the app, because the colours are — see
+          canStatus. */}
+      {canStatus && (
+        <StatusLegend plots={plots} status={status} show={statusOn} />
+      )}
 
       {error && (
         <div style={{

@@ -86,9 +86,9 @@ export const STATUS = {
   //   key: 'agreement', doc: 'Agreement', label: 'Agreement', legacy: [],
   //   fill: '#4CAF50', dot: '#4CAF50', ink: '#FFFFFF',
   // },
-  Booked: {
-    key: 'Booked', doc: 'Booked', label: 'Booked', legacy: [],
-    fill: '#d0554c', dot: '#b3433b', ink: '#FFFFFF',
+  booked: {
+    key: 'booked', doc: 'Booked', label: 'Booked', legacy: [],
+    fill: '#1e325d', dot: '#1e325d', ink: '#FFFFFF',
   },
 };
 

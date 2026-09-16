@@ -5,38 +5,59 @@ import { fittedNumberSize } from '../../lib/labels';
 import { STATUS, statusKeyOf } from '../../theme/status';
 import {
   DIM_EDGE, DIM_FILL, DIM_INK,
-  KIND, MAPFONT, MONO, SANS, PLOT_STROKE, SEL_STROKE, SOCKET_FILL, toneOf,
+  KIND, MAPFONT, MONO, SANS, PLOT_STROKE, SEL_STROKE, SOCKET_FILL,
 } from '../../theme/tokens';
 
-/**
- * The plan itself.
- *
- * EVERY size here is in metres. Nothing is measured in screen pixels and
- * nothing is gated on zoom, so zooming only ever makes the same drawing
- * bigger or smaller — plot numbers never jump size, labels never pop in
- * or out, borders never thicken.
- *
- * Status arrives from Firestore as the Flutter app writes it — "Sold",
- * "Partial Payment" — so it goes through statusKeyOf rather than
- * indexing STATUS directly, which only ever matched the lowercase keys.
- *
- * DIMMING is a reduction, not a removal. A filtered-out plot keeps its
- * own colour, its border and its number, all at lower strength: the
- * point of narrowing is to see where the matches sit INSIDE the layout,
- * and that needs the layout still on the screen. The three strengths
- * differ on purpose — the edge survives highest because a boundary is
- * what makes a faint shape read at all, and the fill lowest because it
- * is the largest area and the first thing to turn into noise.
- */
+/* EVERY plot on the layout, off-white. This replaces toneOf's per-block
+   master-plan tones outright — one plot reads the same as the next, so
+   the only colour anywhere on the plan is a sale colour, and a coloured
+   plot means something rather than being one more shade among twelve.
+
+   Roads, open spaces and amenities are untouched: their colours come
+   from KIND, not from here.
+
+   Change this one constant to recolour the whole layout. */
+const PLAIN_FILL = '#F1ECE2';
+
+/* ── THE LAYOUT BOUNDARY ─────────────────────────────────────────────
+   The outer edge of the whole site, carried down from Firestore's map
+   meta document as `layoutBoundary` and converted in buildLayout.js
+   through the same frame every plot corner goes through — so by the
+   time it reaches here it is already a plain ring of [x, y] points in
+   drawing-space metres, exactly like any feature's own `pts`. Not every
+   project has one, so this draws nothing when the field is absent
+   rather than guessing at an edge from the plots' own extent.
+
+   FILLED IN THE EXACT ROAD COLOUR (KIND.road.fill), NO STROKE — it's a
+   ground tone, not an outlined shape, matching how a road itself sits
+   on the sheet with no border of its own.
+
+   DRAWN FIRST, before plots, roads and every label, so it sits under
+   the whole layout as a backdrop rather than covering any of it. */
 export default function PlanContent({
   layout, selected, matches, status, showNumbers, showStatus, hover, setHover, onPick,
 }) {
   /* One reading of a plot's status, shared by the shape and its number:
-     they have to agree, or a plot ends up with dark ink on a red fill. */
-  const stateOf = (name) => STATUS[statusKeyOf(status[name])];
+     they have to agree, or a plot ends up with dark ink on a red fill.
+
+     `status` is undefined for the first frames, before the Firestore
+     read lands, so it is guarded here rather than indexed raw. */
+  const stateOf = (name) => STATUS[statusKeyOf((status || {})[name])];
+
+  const layoutBoundary = layout.layoutBoundary;
 
   return (
     <g>
+      {layoutBoundary && layoutBoundary.length > 2 && (
+        <path
+          d={pathWithHoles(layoutBoundary)}
+          fill={KIND.road.fill}
+          fillRule="evenodd"
+          stroke="none"
+          style={{ pointerEvents: 'none' }}
+        />
+      )}
+
       {layout.sorted.map((f) => {
         const k = KIND[f.kind];
         const isPlot = f.kind === 'plot';
@@ -45,9 +66,10 @@ export default function PlanContent({
 
         let fill = k.fill;
         if (isPlot) {
-          // master-plan tones by default; the sale palette only when asked for
+          /* Off-white unless the plot has a sale state AND the status
+             view is up. Nothing else colours a plot. */
           const st = stateOf(f.name);
-          fill = showStatus ? (st.fill || toneOf(f.name)) : toneOf(f.name);
+          fill = (showStatus && st.fill) || PLAIN_FILL;
         }
         if (isSel) fill = SOCKET_FILL;   // the raised copy carries the real colour
 
@@ -76,8 +98,10 @@ export default function PlanContent({
         const size = fittedNumberSize(f, 3.2);
         if (size < 0.85) return null;   // smaller than this is a smudge, not a number
         /* Dark ink vanishes on the red and blue fills, so the number
-           takes whatever the status says is legible on it. */
-        const ink = showStatus ? stateOf(f.name).ink : '#1A1208';
+           takes whatever the status says is legible on it — and stays
+           dark on an off-white plot, which has no status to ask. */
+        const st = showStatus ? stateOf(f.name) : null;
+        const ink = (st && st.fill && st.ink) || '#1A1208';
         return (
           <text
             key={`n${f.i}`} x={f.lp[0]} y={f.lp[1]} textAnchor="middle" dy="0.35em"
