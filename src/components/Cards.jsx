@@ -209,9 +209,6 @@ const reveal = {
 ================================================================= */
 export function QuotationCard({ quotation: q, index, onOpen }) {
   const [pressed, setPressed] = useState(false);
-  const [crestBroken, setCrestBroken] = useState(false);
-
-  const crestSrc = getProjectImage(q.projectId, q.projectName, q.project);
 
   return (
     <motion.button
@@ -230,21 +227,11 @@ export function QuotationCard({ quotation: q, index, onOpen }) {
       <span className="qcard-body">
         <span className="qcard-top">
           <span className="qcard-glyph" aria-hidden="true">
-            {crestSrc && !crestBroken ? (
-              <img
-                key={q.projectId || q.projectName}
-                src={crestSrc}
-                alt=""
-                className="qcard-crest-img"
-                onError={() => setCrestBroken(true)}
-              />
-            ) : (
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.4">
-                <path d="M6 3h9l4 4v14H6z" />
-                <path d="M15 3v4h4" />
-                <path d="M9 13h6M9 16.5h6M9 9.5h3" />
-              </svg>
-            )}
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.4">
+              <path d="M6 3h9l4 4v14H6z" />
+              <path d="M15 3v4h4" />
+              <path d="M9 13h6M9 16.5h6M9 9.5h3" />
+            </svg>
           </span>
           <span className="qcard-who">
             <strong>{q.customerName}</strong>
@@ -263,7 +250,6 @@ export function QuotationCard({ quotation: q, index, onOpen }) {
     </motion.button>
   );
 }
-
 /* =================================================================
    MapCard
    Resolves its cover image per-project via map.projectId (falling
