@@ -1,6 +1,3 @@
-
-
-
 // lib/quote.js — the arithmetic behind a quotation, and nothing else.
 
 import { sessionUid, sessionUser } from './Session';
@@ -37,6 +34,12 @@ export const BOOKING_DEFAULT = 51000;
 export const MUTATION_DEFAULT = 15000;
 export const SOCIETY_DEFAULT = 13500;
 export const STAMP_PCT_DEFAULT = 6;
+
+/** The set of down-payment plans the UI offers. Kept in one place so the
+ *  <select> options and any validation can be built off the same list
+ *  instead of drifting out of sync. */
+export const DOWN_PAYMENT_OPTIONS = ['10%', '20%', '25%'];
+export const DOWN_PAYMENT_DEFAULT = '20%';
 
 /**
  * The signed-in user's id, whatever reached this call.
@@ -83,7 +86,7 @@ export function emptyForm({ plotNo = '', areaSqft = 0, projectName = '' } = {}) 
     plotSize: areaSqft ? String(Math.round(areaSqft)) : '',
     ratePerSqFt: '',
     bookingAmount: String(BOOKING_DEFAULT),
-    downPaymentOption: '20%',
+    downPaymentOption: DOWN_PAYMENT_DEFAULT,
     downPayment: '',
     stampDutyPercent: String(STAMP_PCT_DEFAULT),
     mutation: String(MUTATION_DEFAULT),
@@ -100,7 +103,15 @@ export function emptyForm({ plotNo = '', areaSqft = 0, projectName = '' } = {}) 
   };
 }
 
-/** Everything computed, in one pass, from what the user typed. */
+/**
+ * Everything computed, in one pass, from what the user typed.
+ *
+ * downPaymentOption is a string like '10%' / '20%' / '25%'. Rather than
+ * enumerate each one in a ternary or switch — which silently mis-handles
+ * any option added later, as '25%' did when it fell through to the 20%
+ * branch of a two-way ternary — the percentage is parsed straight out of
+ * the string. Adding a fourth option to the <select> needs no change here.
+ */
 export function derive(f) {
   const size = num(f.plotSize);
   const rate = num(f.ratePerSqFt);
@@ -112,8 +123,10 @@ export function derive(f) {
   const total = f.totalEdited ? num(f.totalPlotAmount) : size * rate;
   const agreement = total * AGREEMENT_PCT;
 
-  const pct = f.downPaymentOption === '10%' ? 0.10 : 0.20;
-  const autoDown = Math.max(0, total * pct - booking);
+  // parseFloat('25%') === 25, so this reads whatever percent string the
+  // option carries and falls back to the default only if it's unparseable.
+  const pct = num(f.downPaymentOption, num(DOWN_PAYMENT_DEFAULT)) / 100;
+  const autoDown = Math.max(0, total * pct);
   const down = f.downPaymentEdited ? num(f.downPayment) : autoDown;
 
   const balance = Math.max(0, total - booking - down);
@@ -154,6 +167,13 @@ export function derive(f) {
  * detail pages. If it is ever blank, the record is invisible everywhere.
  * Callers must refuse to save when userUid() comes back empty — see
  * QuotationModal.save.
+ *
+ * downPaymentOption is stored as its own field (alongside the numeric
+ * downPayment) so that reopening a record for editing can read back
+ * exactly which plan was chosen, rather than guessing it from the ratio
+ * of downPayment to totalPlotAmount — a guess that only ever covered two
+ * buckets and misclassifies a third. Older records saved before this
+ * field existed fall back to '20%' in fromDoc.
  */
 export function toDoc(f, d, user) {
   const stored = sessionUser();
@@ -168,6 +188,7 @@ export function toDoc(f, d, user) {
     totalPlotAmount: d.total,
     bookingAmount: d.booking,
     downPayment: d.down,
+    downPaymentOption: f.downPaymentOption,
     loanAmount: d.balance,
     stampDutyPercent: d.stampDutyPercent,
     stampDutyAmount: d.stampDuty,
@@ -206,6 +227,9 @@ export function fromDoc(data, id) {
     totalPlotAmount: Number(data.totalPlotAmount) || 0,
     bookingAmount: Number(data.bookingAmount) || 0,
     downPayment: Number(data.downPayment) || 0,
+    // Older records were saved before this field existed; '20%' matches
+    // what toForm used to infer for anything that wasn't clearly 10%.
+    downPaymentOption: data.downPaymentOption || DOWN_PAYMENT_DEFAULT,
     loanAmount: Number(data.loanAmount) || 0,
     stampDutyPercent: Number(data.stampDutyPercent) || 0,
     stampDutyAmount: Number(data.stampDutyAmount) || 0,
@@ -252,10 +276,11 @@ export function toForm(q) {
     bookingDate: dateIn(q.bookingDate),
     downPaymentDate: dateIn(q.downPaymentDate),
     saleDeedDate: dateIn(q.saleDeederDate),
-    downPaymentOption:
-      q.totalPlotAmount > 0
-      && ((q.downPayment + q.bookingAmount) / q.totalPlotAmount) * 100 <= 12
-        ? '10%' : '20%',
+    // Read directly from the stored field now (see toDoc/fromDoc) instead
+    // of inferring it from the ratio of downPayment to totalPlotAmount —
+    // that inference only ever distinguished two buckets and silently
+    // mislabels a 25% (or any other) record as '20%'.
+    downPaymentOption: q.downPaymentOption || DOWN_PAYMENT_DEFAULT,
     /* A saved record's numbers are whatever was saved, not whatever the
        formula would produce now — so the overrides start ON. Clearing an
        override hands the field back to derive. */

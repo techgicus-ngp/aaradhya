@@ -30,7 +30,6 @@ export default function QuotationDetail({
   const [err, setErr] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const agreement = q.totalPlotAmount * 0.20;
   const stampReg = q.stampDutyAmount + q.registrationAmount;
 
   const print = () => {
@@ -201,9 +200,8 @@ export default function QuotationDetail({
 
         <Section title="Plot amount">
           <Row label="Total plot amount" value={q.totalPlotAmount} strong />
-          <Row label="Agreement (20%)" value={agreement} auto />
+          <Row label={`Down payment (${q.downPaymentOption || '20%'})`} value={q.downPayment} auto />
           <Row label="Booking" value={q.bookingAmount} />
-          {/* <Row label="Down payment" value={q.downPayment} /> */}
           <Row label="Remaining" value={q.loanAmount} auto />
         </Section>
 

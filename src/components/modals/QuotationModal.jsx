@@ -880,12 +880,15 @@ export default function QuotationModal({
 
   const lines = [
     ['Total plot amount', d.total],
-    ['Agreement amount (20%)', d.agreement],
+    // ['Agreement amount (20%)', d.agreement],
     ['Booking amount', d.booking],
     ['Down payment', d.down],
     ['Balance amount', d.balance],
     [`Stamp duty (${Math.round(d.stampDutyPercent)}%)`, d.stampDuty],
     ['Registration', d.registration],
+    
+    ['Mutation', d.mutation],
+    ['Society charges', d.society],
     ['Admin total', d.adminTotal],
   ];
 
@@ -1015,7 +1018,7 @@ export default function QuotationModal({
               onChange={setOverride('totalPlotAmount', 'totalEdited')}
               onRelease={release('totalEdited')}
             />
-            <ReadonlyAuto label="Agreement amount (20%)" value={d.agreement} />
+            {/* <ReadonlyAuto label="Agreement amount (20%)" value={d.agreement} /> */}
             <Field
               label="Booking amount"
               name="bookingAmount"
@@ -1036,10 +1039,11 @@ export default function QuotationModal({
               >
                 <option value="10%">Down payment 10%</option>
                 <option value="20%">Down payment 20%</option>
+                <option value="25%">Down payment 25%</option>
               </select>
             </label>
             <Derived
-              label={`Down payment (${f.downPaymentOption} − booking)`}
+              label={`Down payment (${f.downPaymentOption})`}
               name="downPayment"
               active={f.downPaymentEdited}
               displayValue={f.downPaymentEdited ? f.downPayment : Math.round(d.down)}

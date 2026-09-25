@@ -72,23 +72,23 @@ import { PLOT_TONES } from './tokens';
 export const STATUS = {
   available: {
     key: 'available', doc: 'Available', label: 'Available', legacy: [],
-    tones: PLOT_TONES, fill: '#F2EDE1', dot: '#D2A68D', ink: '#1A1208',
+    tones: PLOT_TONES, fill: '#c2fdc4', dot: '#D2A68D', ink: '#1A1208',
   },
-  // token: {
-  //   key: 'token', doc: 'Token', label: 'Token', legacy: ['booked'],
-  //   fill: '#2196F3', dot: '#2196F3', ink: '#FFFFFF',
-  // },
+  booked: {
+    key: 'booked', doc: 'Booked', label: 'Booked', legacy: [],
+    fill: '#71b2e6', dot: '#71b2e6', ink: '#FFFFFF',
+  },
   // partial: {
   //   key: 'partial', doc: 'Partial Payment', label: 'Part paid', legacy: ['reserved'],
   //   fill: '#FFC107', dot: '#FFC107', ink: '#1A1208',
   // },
-  // agreement: {
-  //   key: 'agreement', doc: 'Agreement', label: 'Agreement', legacy: [],
-  //   fill: '#4CAF50', dot: '#4CAF50', ink: '#FFFFFF',
-  // },
-  booked: {
-    key: 'booked', doc: 'Booked', label: 'Booked', legacy: [],
-    fill: '#1e325d', dot: '#1e325d', ink: '#FFFFFF',
+  agreement: {
+    key: 'agreement', doc: 'Agreement', label: 'Agreement', legacy: [],
+    fill: '#9fc03c', dot: '#9fc03c', ink: '#FFFFFF',
+  },
+  sold: {
+    key: 'sold', doc: 'Sold', label: 'Sold', legacy: [],
+    fill: '#F44336', dot: '#F44336', ink: '#FFFFFF',
   },
 };
 

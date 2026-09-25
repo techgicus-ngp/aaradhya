@@ -78,7 +78,6 @@ const TERMS = [
 
 export function quotationHtml(q, { company = 'Aradhya', unit = 'Aradhya', logo = '' } = {}) {
   const ref = q.id ? q.id.slice(0, 8).toUpperCase() : '';
-  const agreement = q.totalPlotAmount * 0.20;
   const stampReg = q.stampDutyAmount + q.registrationAmount;
 
   return `<!doctype html>
@@ -199,9 +198,8 @@ export function quotationHtml(q, { company = 'Aradhya', unit = 'Aradhya', logo =
       <div class="table">
         ${amt('Description', 'Amount', { head: true })}
         ${amt('Total Plot Amount', q.totalPlotAmount, { sub: `${nfmt(q.plotSize)} sq ft × ${inr(q.ratePerSqFt)}` })}
-        ${amt('Agreement (20%)', agreement, { alt: true })}
+        ${amt(`Down Payment (${q.downPaymentOption || '20%'})`, q.downPayment, { alt: true })}
         ${amt('Booking', q.bookingAmount)}
-      
         ${amt('Remaining', q.loanAmount)}
       </div>
       <div class="gap"></div>
@@ -227,9 +225,9 @@ export function quotationHtml(q, { company = 'Aradhya', unit = 'Aradhya', logo =
     <div class="col" style="flex:4">
       <div class="box" style="border-color:#A5D6A7;background:${LIGHT_GREEN}">
         <h3 style="background:${GREEN}">Payment Summary</h3>
-        ${sum('Plot Amount', q.totalPlotAmount)}
-        ${sum('Agreement Amt (20%)', agreement, true)}
-        ${sum('Stamp + Reg', stampReg)}
+  
+       
+              ${sum('Plot Amount', q.totalPlotAmount)}
         ${sum('Admin Charges', q.adminTotal)}
         <div class="grand" style="background:${GREEN}"><span>GRAND TOTAL</span><span>${inr(q.finalTotalAmount)}</span></div>
       </div>

@@ -256,12 +256,69 @@ export function QuotationCard({ quotation: q, index, onOpen }) {
    back to map.projectName, then the default crest). Falls back to
    a plain glyph if the resolved image fails to decode.
 ================================================================= */
+/* ---------------------------------------------------------------
+   Share helpers (frontend only)
+------------------------------------------------------------------ */
+function buildShareUrl(mapId) {
+  return `${window.location.origin}/share/maps/${encodeURIComponent(mapId)}`;
+}
+
+async function copyText(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch { /* fall through to legacy copy */ }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+/** Native share sheet if available, otherwise copy to clipboard. */
+async function shareMapLink(map) {
+  const url = buildShareUrl(map.id);
+  const title = map.name || 'Layout map';
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title, text: `${title} – layout map`, url });
+      return 'shared';
+    } catch (err) {
+      if (err?.name === 'AbortError') return 'cancelled';
+    }
+  }
+  return (await copyText(url)) ? 'copied' : 'failed';
+}
+
+/* =================================================================
+   MapCard
+================================================================= */
 export function MapCard({ map, index, onOpen }) {
   const [pressed, setPressed] = useState(false);
   const [broken, setBroken] = useState(false);
+  const [shareState, setShareState] = useState('idle'); // idle | copied | failed
 
   const open = onOpen || (() => {});
   const crestSrc = getProjectImage(map.projectId, map.projectName, map.project, map.name, map.title);
+
+  const handleShare = async (e) => {
+    e.stopPropagation();
+    const result = await shareMapLink(map);
+    if (result === 'copied' || result === 'failed') {
+      setShareState(result);
+      setTimeout(() => setShareState('idle'), 2000);
+    }
+  };
 
   return (
     <motion.div
@@ -285,9 +342,9 @@ export function MapCard({ map, index, onOpen }) {
         ) : (
           <>
             <img
-              key={map.projectId || map.projectName}
+              key={map.projectId || map.projectName || map.name}
               src={crestSrc}
-              alt={`${map.projectName || map.projectId || 'Project'} crest`}
+              alt={`${map.projectName || map.name || map.projectId || 'Project'} crest`}
               className="mcard-crest"
               onError={() => setBroken(true)}
             />
@@ -309,9 +366,27 @@ export function MapCard({ map, index, onOpen }) {
             </span>
           )}
         </div>
-        <button type="button" className="mcard-open" onClick={open}>
-          Open map
-        </button>
+
+        <div className="mcard-actions">
+          <button
+            type="button"
+            className={`mcard-share${shareState !== 'idle' ? ` is-${shareState}` : ''}`}
+            onClick={handleShare}
+            aria-label="Share layout link"
+          >
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6">
+              <circle cx="18" cy="5" r="2.5" />
+              <circle cx="6" cy="12" r="2.5" />
+              <circle cx="18" cy="19" r="2.5" />
+              <path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4" />
+            </svg>
+            {shareState === 'copied' ? 'Link copied' : shareState === 'failed' ? 'Copy failed' : 'Share'}
+          </button>
+
+          <button type="button" className="mcard-open" onClick={() => open(map)}>
+            Open map
+          </button>
+        </div>
       </div>
     </motion.div>
   );
@@ -645,6 +720,35 @@ export default function ProsperaCardsPreview() {
           background: var(--gold);
           color: #fff;
         }
+          .mcard-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.mcard-share {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--hair);
+  background: var(--panel);
+  color: var(--gold-deep);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+.mcard-share:hover { border-color: var(--gold); background: var(--gold-soft); }
+.mcard-share.is-copied { border-color: #3f7d4e; color: #3f7d4e; background: #eaf5ec; }
+.mcard-share.is-failed { border-color: #b3402f; color: #b3402f; background: #fbeceA; }
+
+/* small phones: keep both buttons on screen */
+@media (max-width: 380px) {
+  .mcard-foot { flex-direction: column; align-items: stretch; }
+  .mcard-actions { justify-content: flex-end; }
+}
       `}</style>
     </div>
   );
