@@ -303,6 +303,51 @@ body {
   background: linear-gradient(to bottom, transparent, var(--app-surface));
   pointer-events: none;
 }
+
+/* Share button pinned to the top-right of the cover image. .mcard-cover
+   is already `position: relative` above, so `top`/`right` here measure
+   from the cover itself. This rule was MISSING entirely — without it
+   the button has no positioning at all, so it falls into normal flow
+   after the <img> and gets clipped by .mcard's overflow:hidden, which
+   is why it was showing up jammed into the bottom-left corner instead
+   of floating over the image. */
+.mcard-share-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(20, 18, 13, 0.78);
+  color: var(--app-text);
+  cursor: pointer;
+  padding: 0;
+  backdrop-filter: blur(3px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.mcard-share-icon:hover {
+  background: var(--app-accent-soft);
+  border-color: var(--app-accent-dim);
+  color: var(--app-accent);
+}
+.mcard-share-icon:active { transform: scale(0.92); }
+.mcard-share-icon.is-copied {
+  background: rgba(63, 125, 78, 0.85);
+  border-color: rgba(63, 125, 78, 0.85);
+  color: #eaf5ec;
+}
+.mcard-share-icon.is-failed {
+  background: rgba(179, 64, 47, 0.85);
+  border-color: rgba(179, 64, 47, 0.85);
+  color: #fbeceA;
+}
+
 .mcard-foot { display: flex; align-items: center; gap: 12px; padding: 12px 14px 14px; }
 .mcard-name { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .mcard-name strong {
@@ -494,5 +539,3 @@ body {
   left: 96px;          /* clear of the Filters button — match its width */
   z-index: 6;
 }
-
-

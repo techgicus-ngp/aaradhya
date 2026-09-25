@@ -302,6 +302,10 @@ async function shareMapLink(map) {
 
 /* =================================================================
    MapCard
+   Share moved onto the cover image itself, top-right corner —
+   icon only, no label. The label text still lives in `title`
+   (tooltip) and `aria-label` so it stays accessible; it just isn't
+   painted on the card anymore.
 ================================================================= */
 export function MapCard({ map, index, onOpen }) {
   const [pressed, setPressed] = useState(false);
@@ -310,6 +314,12 @@ export function MapCard({ map, index, onOpen }) {
 
   const open = onOpen || (() => {});
   const crestSrc = getProjectImage(map.projectId, map.projectName, map.project, map.name, map.title);
+
+  const shareLabel = shareState === 'copied'
+    ? 'Link copied'
+    : shareState === 'failed'
+      ? 'Copy failed'
+      : 'Share layout link';
 
   const handleShare = async (e) => {
     e.stopPropagation();
@@ -353,6 +363,21 @@ export function MapCard({ map, index, onOpen }) {
           </>
         )}
         <span className="mcard-fade" aria-hidden="true" />
+
+        <button
+          type="button"
+          className={`mcard-share-icon${shareState !== 'idle' ? ` is-${shareState}` : ''}`}
+          onClick={handleShare}
+          aria-label={shareLabel}
+          title={shareLabel}
+        >
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <circle cx="18" cy="5" r="2.5" />
+            <circle cx="6" cy="12" r="2.5" />
+            <circle cx="18" cy="19" r="2.5" />
+            <path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4" />
+          </svg>
+        </button>
       </div>
 
       <div className="mcard-foot">
@@ -367,26 +392,9 @@ export function MapCard({ map, index, onOpen }) {
           )}
         </div>
 
-        <div className="mcard-actions">
-          <button
-            type="button"
-            className={`mcard-share${shareState !== 'idle' ? ` is-${shareState}` : ''}`}
-            onClick={handleShare}
-            aria-label="Share layout link"
-          >
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6">
-              <circle cx="18" cy="5" r="2.5" />
-              <circle cx="6" cy="12" r="2.5" />
-              <circle cx="18" cy="19" r="2.5" />
-              <path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4" />
-            </svg>
-            {shareState === 'copied' ? 'Link copied' : shareState === 'failed' ? 'Copy failed' : 'Share'}
-          </button>
-
-          <button type="button" className="mcard-open" onClick={() => open(map)}>
-            Open map
-          </button>
-        </div>
+        <button type="button" className="mcard-open" onClick={() => open(map)}>
+          Open map
+        </button>
       </div>
     </motion.div>
   );
@@ -646,11 +654,7 @@ export default function ProsperaCardsPreview() {
 
         .mcard-cover {
           position: relative;
-          aspect-ratio: 16 / 10;
-          background: radial-gradient(120% 120% at 50% 20%, #2c261c 0%, var(--charcoal) 70%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
+         
         }
         .mcard-crest {
           width: 62%;
@@ -677,6 +681,44 @@ export default function ProsperaCardsPreview() {
           height: 46%;
           background: linear-gradient(180deg, rgba(32,28,23,0) 0%, rgba(32,28,23,0.55) 100%);
           pointer-events: none;
+        }
+
+        /* Share button: icon only, pinned to the top-right corner of the
+           cover image. Sits above mcard-fade (later in the DOM = higher
+           stacking within this positioning context) so it's always
+           clickable regardless of the crest image underneath. */
+        .mcard-share-icon {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(20, 20, 22, 0.88);
+  color: #d9dbe0;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+        .mcard-share-icon:hover {
+          background: rgba(40, 40, 44, 0.95);
+          border-color: rgba(255, 255, 255, 0.18);
+          color: #fff;
+        }
+        .mcard-share-icon:active { transform: scale(0.92); }
+        .mcard-share-icon.is-copied {
+          background: #3f7d4e;
+          border-color: #3f7d4e;
+          color: #eaf5ec;
+        }
+        .mcard-share-icon.is-failed {
+          background: #b3402f;
+          border-color: #b3402f;
+          color: #fbeceA;
         }
 
         .mcard-foot {
@@ -720,35 +762,6 @@ export default function ProsperaCardsPreview() {
           background: var(--gold);
           color: #fff;
         }
-          .mcard-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-.mcard-share {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12.5px;
-  font-weight: 600;
-  padding: 7px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--hair);
-  background: var(--panel);
-  color: var(--gold-deep);
-  cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
-}
-.mcard-share:hover { border-color: var(--gold); background: var(--gold-soft); }
-.mcard-share.is-copied { border-color: #3f7d4e; color: #3f7d4e; background: #eaf5ec; }
-.mcard-share.is-failed { border-color: #b3402f; color: #b3402f; background: #fbeceA; }
-
-/* small phones: keep both buttons on screen */
-@media (max-width: 380px) {
-  .mcard-foot { flex-direction: column; align-items: stretch; }
-  .mcard-actions { justify-content: flex-end; }
-}
       `}</style>
     </div>
   );

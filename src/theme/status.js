@@ -72,11 +72,11 @@ import { PLOT_TONES } from './tokens';
 export const STATUS = {
   available: {
     key: 'available', doc: 'Available', label: 'Available', legacy: [],
-    tones: PLOT_TONES, fill: '#c2fdc4', dot: '#D2A68D', ink: '#1A1208',
+    tones: PLOT_TONES, fill: '#fffef8', dot: '#D2A68D', ink: '#1A1208',
   },
   booked: {
     key: 'booked', doc: 'Booked', label: 'Booked', legacy: [],
-    fill: '#71b2e6', dot: '#71b2e6', ink: '#FFFFFF',
+    fill: '#28465e', dot: '#28465e', ink: '#FFFFFF',
   },
   // partial: {
   //   key: 'partial', doc: 'Partial Payment', label: 'Part paid', legacy: ['reserved'],
