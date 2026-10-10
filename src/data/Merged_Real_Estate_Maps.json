@@ -1,0 +1,633 @@
+{
+  "totalMaps": 3,
+  "maps": [
+    {
+      "mapName": "ARADHYA NAGARI",
+      "khNo": "3/1/B(part)",
+      "mouza": "kharsoli pipla",
+      "totalPlots": 45,
+      "plots": [
+        {
+          "plotNo": 1,
+          "price": 2200
+        },
+        {
+          "plotNo": 2,
+          "price": 2100
+        },
+        {
+          "plotNo": 3,
+          "price": 2100
+        },
+        {
+          "plotNo": 4,
+          "price": 2100
+        },
+        {
+          "plotNo": 5,
+          "price": 2100
+        },
+        {
+          "plotNo": 6,
+          "price": 2100
+        },
+        {
+          "plotNo": 7,
+          "price": 2100
+        },
+        {
+          "plotNo": 8,
+          "price": 2100
+        },
+        {
+          "plotNo": 9,
+          "price": 2100
+        },
+        {
+          "plotNo": 10,
+          "price": 2100
+        },
+        {
+          "plotNo": 11,
+          "price": 2100
+        },
+        {
+          "plotNo": 12,
+          "price": 2100
+        },
+        {
+          "plotNo": 13,
+          "price": 2100
+        },
+        {
+          "plotNo": 14,
+          "price": 2100
+        },
+        {
+          "plotNo": 15,
+          "price": 2100
+        },
+        {
+          "plotNo": 16,
+          "price": 2100
+        },
+        {
+          "plotNo": 17,
+          "price": 2100
+        },
+        {
+          "plotNo": 18,
+          "price": 2200
+        },
+        {
+          "plotNo": 19,
+          "price": 2200
+        },
+        {
+          "plotNo": 20,
+          "price": 2100
+        },
+        {
+          "plotNo": 21,
+          "price": 2100
+        },
+        {
+          "plotNo": 22,
+          "price": 2100
+        },
+        {
+          "plotNo": 23,
+          "price": 2100
+        },
+        {
+          "plotNo": 24,
+          "price": 2100
+        },
+        {
+          "plotNo": 25,
+          "price": 2100
+        },
+        {
+          "plotNo": 26,
+          "price": 2100
+        },
+        {
+          "plotNo": 27,
+          "price": 2100
+        },
+        {
+          "plotNo": 28,
+          "price": 2100
+        },
+        {
+          "plotNo": 29,
+          "price": 2100
+        },
+        {
+          "plotNo": 30,
+          "price": 2100
+        },
+        {
+          "plotNo": 31,
+          "price": 2100
+        },
+        {
+          "plotNo": 32,
+          "price": 2100
+        },
+        {
+          "plotNo": 33,
+          "price": 2100
+        },
+        {
+          "plotNo": 34,
+          "price": 2100
+        },
+        {
+          "plotNo": 35,
+          "price": 2100
+        },
+        {
+          "plotNo": 36,
+          "price": 2100
+        },
+        {
+          "plotNo": 37,
+          "price": 2100
+        },
+        {
+          "plotNo": 38,
+          "price": 2200
+        },
+        {
+          "plotNo": 39,
+          "price": 2200
+        },
+        {
+          "plotNo": 40,
+          "price": 2100
+        },
+        {
+          "plotNo": 41,
+          "price": 2100
+        },
+        {
+          "plotNo": 42,
+          "price": 2100
+        },
+        {
+          "plotNo": 43,
+          "price": 2100
+        },
+        {
+          "plotNo": 44,
+          "price": 2200
+        },
+        {
+          "plotNo": 45,
+          "price": 2200
+        }
+      ]
+    },
+    {
+      "mapName": "Vastu Bhumi",
+      "khNo": "40",
+      "mouza": "sukali(beldar), butibori",
+      "totalPlots": 57,
+      "plots": [
+        {
+          "plotNo": 1,
+          "price": 1850
+        },
+        {
+          "plotNo": 2,
+          "price": 1850
+        },
+        {
+          "plotNo": 3,
+          "price": 1790
+        },
+        {
+          "plotNo": 4,
+          "price": 1790
+        },
+        {
+          "plotNo": 5,
+          "price": 1790
+        },
+        {
+          "plotNo": 6,
+          "price": 1790
+        },
+        {
+          "plotNo": 7,
+          "price": 1790
+        },
+        {
+          "plotNo": 8,
+          "price": 1790
+        },
+        {
+          "plotNo": 9,
+          "price": 1850
+        },
+        {
+          "plotNo": 10,
+          "price": 1850
+        },
+        {
+          "plotNo": 11,
+          "price": 1790
+        },
+        {
+          "plotNo": 12,
+          "price": 1790
+        },
+        {
+          "plotNo": 13,
+          "price": 1790
+        },
+        {
+          "plotNo": 14,
+          "price": 1790
+        },
+        {
+          "plotNo": 15,
+          "price": 1790
+        },
+        {
+          "plotNo": 16,
+          "price": 1790
+        },
+        {
+          "plotNo": 17,
+          "price": 1850
+        },
+        {
+          "plotNo": 18,
+          "price": 1850
+        },
+        {
+          "plotNo": 19,
+          "price": 1790
+        },
+        {
+          "plotNo": 20,
+          "price": 1790
+        },
+        {
+          "plotNo": 21,
+          "price": 1790
+        },
+        {
+          "plotNo": 22,
+          "price": 1790
+        },
+        {
+          "plotNo": 23,
+          "price": 1790
+        },
+        {
+          "plotNo": 24,
+          "price": 1790
+        },
+        {
+          "plotNo": 25,
+          "price": 1790
+        },
+        {
+          "plotNo": 26,
+          "price": 1790
+        },
+        {
+          "plotNo": 27,
+          "price": 1790
+        },
+        {
+          "plotNo": 28,
+          "price": 1790
+        },
+        {
+          "plotNo": 29,
+          "price": 1790
+        },
+        {
+          "plotNo": 30,
+          "price": 1790
+        },
+        {
+          "plotNo": 31,
+          "price": 1790
+        },
+        {
+          "plotNo": 32,
+          "price": 1790
+        },
+        {
+          "plotNo": 33,
+          "price": 1790
+        },
+        {
+          "plotNo": 34,
+          "price": 1790
+        },
+        {
+          "plotNo": 35,
+          "price": 1790
+        },
+        {
+          "plotNo": 36,
+          "price": 1790
+        },
+        {
+          "plotNo": 37,
+          "price": 1790
+        },
+        {
+          "plotNo": 38,
+          "price": 1790
+        },
+        {
+          "plotNo": 39,
+          "price": 1790
+        },
+        {
+          "plotNo": 40,
+          "price": 1790
+        },
+        {
+          "plotNo": 41,
+          "price": 1850
+        },
+        {
+          "plotNo": 42,
+          "price": 1850
+        },
+        {
+          "plotNo": 43,
+          "price": 1790
+        },
+        {
+          "plotNo": 44,
+          "price": 1790
+        },
+        {
+          "plotNo": 45,
+          "price": 1790
+        },
+        {
+          "plotNo": 46,
+          "price": 1790
+        },
+        {
+          "plotNo": 47,
+          "price": 1790
+        },
+        {
+          "plotNo": 48,
+          "price": 1790
+        },
+        {
+          "plotNo": 49,
+          "price": 1850
+        },
+        {
+          "plotNo": 50,
+          "price": 1850
+        },
+        {
+          "plotNo": 51,
+          "price": 1790
+        },
+        {
+          "plotNo": 52,
+          "price": 1790
+        },
+        {
+          "plotNo": 53,
+          "price": 1790
+        },
+        {
+          "plotNo": 54,
+          "price": 1790
+        },
+        {
+          "plotNo": 55,
+          "price": 1790
+        },
+        {
+          "plotNo": 56,
+          "price": 1790
+        },
+        {
+          "plotNo": 57,
+          "price": 1850
+        }
+      ]
+    },
+    {
+      "mapName": "HANUMAN VATIKA",
+      "khNo": "82/2",
+      "mouza": "pandurna (tarodi)",
+      "totalPlots": 49,
+      "plots": [
+        {
+          "plotNo": 1,
+          "price": 2750
+        },
+        {
+          "plotNo": 2,
+          "price": 2750
+        },
+        {
+          "plotNo": 3,
+          "price": 2650
+        },
+        {
+          "plotNo": 4,
+          "price": 2650
+        },
+        {
+          "plotNo": 5,
+          "price": 2750
+        },
+        {
+          "plotNo": 6,
+          "price": 2750
+        },
+        {
+          "plotNo": 7,
+          "price": 2650
+        },
+        {
+          "plotNo": 8,
+          "price": 2650
+        },
+        {
+          "plotNo": 9,
+          "price": 2650
+        },
+        {
+          "plotNo": 10,
+          "price": 2650
+        },
+        {
+          "plotNo": 11,
+          "price": 2750
+        },
+        {
+          "plotNo": 12,
+          "price": 2750
+        },
+        {
+          "plotNo": 13,
+          "price": 2650
+        },
+        {
+          "plotNo": 14,
+          "price": 2650
+        },
+        {
+          "plotNo": 15,
+          "price": 2650
+        },
+        {
+          "plotNo": 16,
+          "price": 2650
+        },
+        {
+          "plotNo": 17,
+          "price": 2750
+        },
+        {
+          "plotNo": 18,
+          "price": 2750
+        },
+        {
+          "plotNo": 19,
+          "price": 2650
+        },
+        {
+          "plotNo": 20,
+          "price": 2650
+        },
+        {
+          "plotNo": 21,
+          "price": 2650
+        },
+        {
+          "plotNo": 22,
+          "price": 2650
+        },
+        {
+          "plotNo": 23,
+          "price": 2750
+        },
+        {
+          "plotNo": 24,
+          "price": 2750
+        },
+        {
+          "plotNo": 25,
+          "price": 2650
+        },
+        {
+          "plotNo": 26,
+          "price": 2650
+        },
+        {
+          "plotNo": 27,
+          "price": 2650
+        },
+        {
+          "plotNo": 28,
+          "price": 2650
+        },
+        {
+          "plotNo": 29,
+          "price": 2650
+        },
+        {
+          "plotNo": 30,
+          "price": 2650
+        },
+        {
+          "plotNo": 31,
+          "price": 2650
+        },
+        {
+          "plotNo": 32,
+          "price": 2650
+        },
+        {
+          "plotNo": 33,
+          "price": 2650
+        },
+        {
+          "plotNo": 34,
+          "price": 2650
+        },
+        {
+          "plotNo": 35,
+          "price": 2650
+        },
+        {
+          "plotNo": 36,
+          "price": 2750
+        },
+        {
+          "plotNo": 37,
+          "price": 2750
+        },
+        {
+          "plotNo": 38,
+          "price": 2650
+        },
+        {
+          "plotNo": 39,
+          "price": 2650
+        },
+        {
+          "plotNo": 40,
+          "price": 2650
+        },
+        {
+          "plotNo": 41,
+          "price": 2650
+        },
+        {
+          "plotNo": 42,
+          "price": 2650
+        },
+        {
+          "plotNo": 43,
+          "price": 2650
+        },
+        {
+          "plotNo": 44,
+          "price": 2650
+        },
+        {
+          "plotNo": 45,
+          "price": 2650
+        },
+        {
+          "plotNo": 46,
+          "price": 2650
+        },
+        {
+          "plotNo": 47,
+          "price": 2650
+        },
+        {
+          "plotNo": 48,
+          "price": 2650
+        },
+        {
+          "plotNo": 49,
+          "price": 2750
+        }
+      ]
+    }
+  ]
+}

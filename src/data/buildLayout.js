@@ -3,6 +3,7 @@ import {
   centroid, edgeLengths, inradiusAt, longestEdgeAngle, polygonArea,
 } from '../lib/geometry';
 import { statusKeyOf } from '../theme/status';
+import { SQFT } from '../lib/units';
 
 /* The Flutter model's `type` field, in every spelling that has turned up
    in the data, mapped to the six land uses the plan knows how to draw. */
@@ -77,6 +78,10 @@ export function buildLayout(docs, mapMeta = {}) {
     const sides = edgeLengths(pts);
     const name = String(p.plotNo || p.title || p.srNo || i + 1);
 
+    // trust the stored figures — they came off the CAD; fall back to the ring
+    const storedArea = p.area > 0 ? p.area : polygonArea(pts);
+    const storedSqFt = p.areaSqFt > 0 ? p.areaSqFt : storedArea * SQFT;
+
     return {
       i,
       docPath: p.docPath,
@@ -90,8 +95,8 @@ export function buildLayout(docs, mapMeta = {}) {
       lp,
       ir: inradiusAt(pts, lp),
       angle: longestEdgeAngle(pts),
-      // trust the stored area — it came off the CAD; fall back to the ring
-      area: p.area > 0 ? p.area : polygonArea(pts),
+      area: storedArea,
+      areaSqFt: storedSqFt,
       statusKey: statusKeyOf(p.status),
       doc: p,
     };

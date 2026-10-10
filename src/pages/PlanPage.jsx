@@ -280,16 +280,16 @@ export default function PlanPage({ share = false }) {
 // />
         )}
 
-        <DetailPanel
-          plot={selPlot}
-          status={status}
-          /* Shared link is read-only: the plan, the plot sizes and the
-             sold/available colours are the point, editing them is not. */
-          setStatus={share ? null : setStatus}
-          latLng={selLL}
-          onClose={() => navigate(base)}
-          onQuote={share ? null : () => navigate(`${plotPath(selected)}/quote`)}
-        />
+       <DetailPanel
+  plot={selPlot}
+  status={status}
+  setStatus={share ? null : setStatus}
+  latLng={selLL}
+  onClose={() => navigate(base)}
+  onQuote={share ? null : () => navigate(`${plotPath(selected)}/quote`)}
+  meta={layout?.meta}
+  mapName={layout?.meta?.title ?? layout?.meta?.name ?? layout?.name}
+/>
 
         {layout && error && (
           <div style={{
